@@ -1,11 +1,15 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useServiceWorker } from './lib/registerSW';
 import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 import OnboardingPage from './pages/OnboardingPage';
-import HomePage from './pages/HomePage';
-import ActivityDetailPage from './pages/ActivityDetailPage';
-import SettingsPage from './pages/SettingsPage';
+
+// Home e Dettaglio attività trascinano recharts/date-fns: caricate on-demand
+// per non appesantire il primo avvio (importante su una PWA mobile offline-first).
+const HomePage = lazy(() => import('./pages/HomePage'));
+const ActivityDetailPage = lazy(() => import('./pages/ActivityDetailPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 function RequireFamily({ children }: { children: React.ReactNode }) {
   const { member, loading } = useAuth();
@@ -14,36 +18,42 @@ function RequireFamily({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PageFallback() {
+  return <div className="p-6 text-text-secondary">Caricamento…</div>;
+}
+
 function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route
-        path="/"
-        element={
-          <RequireFamily>
-            <HomePage />
-          </RequireFamily>
-        }
-      />
-      <Route
-        path="/activities/:activityId"
-        element={
-          <RequireFamily>
-            <ActivityDetailPage />
-          </RequireFamily>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <RequireFamily>
-            <SettingsPage />
-          </RequireFamily>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route
+          path="/"
+          element={
+            <RequireFamily>
+              <HomePage />
+            </RequireFamily>
+          }
+        />
+        <Route
+          path="/activities/:activityId"
+          element={
+            <RequireFamily>
+              <ActivityDetailPage />
+            </RequireFamily>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RequireFamily>
+              <SettingsPage />
+            </RequireFamily>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 

@@ -30,23 +30,40 @@ npx supabase db push        # applica le migration in supabase/migrations
 
 Nessun segreto è committato nel repository: la `anon key` in `.env` è pubblica
 per progettazione, la sicurezza dei dati è garantita esclusivamente dalle
-policy RLS definite in `supabase/migrations/0001_init.sql`. Le chiavi
-`service_role` e VAPID private vivono solo nei secrets delle Edge Functions
-(`npx supabase secrets set ...`), mai nel codice o in `.env`.
+policy RLS definite in `supabase/migrations/*.sql`. Le chiavi `service_role`
+e VAPID private vivono solo nei secrets delle Edge Functions, mai nel codice
+o in `.env`.
+
+### Notifiche push (VAPID)
+
+```bash
+npx web-push generate-vapid-keys        # una tantum per progetto
+cp supabase/functions/.env.example supabase/functions/.env
+# compila supabase/functions/.env con le chiavi generate, poi:
+npx supabase secrets set --env-file supabase/functions/.env
+npx supabase functions deploy send-push evaluate-balance
+```
+
+La chiave pubblica VAPID va anche in `.env` come `VITE_VAPID_PUBLIC_KEY` (è
+quella che il browser usa per la sottoscrizione, non è un segreto). La
+valutazione periodica del bilancio (`evaluate-balance`) va poi schedulata
+con `pg_cron`: il comando esatto, che richiede il project ref e la
+service_role key salvata in Vault, è documentato in
+`supabase/migrations/0002_notifications.sql`.
 
 ## Struttura
 
 ```
 src/
-  pages/        pagine di primo livello (routing)
+  pages/        pagine di primo livello (routing, lazy-loaded)
   components/   componenti riusabili (radar, card attività, ecc.)
   contexts/      stato di autenticazione/famiglia
   hooks/         data-fetching verso Supabase
-  lib/           client Supabase, coda offline, calcolo colori/soglie
-  types/         tipi condivisi che rispecchiano lo schema Postgres
+  lib/           client Supabase, coda offline, push, calcolo colori/soglie
+  sw.ts          service worker custom (precache + eventi push/notificationclick)
 supabase/
   migrations/    schema SQL + RLS
-  functions/     Edge Functions (verify-pin, send-push, evaluate-balance)
+  functions/     Edge Functions (send-push, evaluate-balance, _shared)
 ```
 
 ## Limiti noti
