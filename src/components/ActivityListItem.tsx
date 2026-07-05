@@ -1,8 +1,7 @@
-import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { Activity, FamilyBalanceRow } from '../types/database';
 import { statusColorVar, STATUS_LABEL, tokenToVar } from '../lib/colors';
-import { Button } from './ui/Button';
+import { QuickLogControl } from './QuickLogControl';
 
 interface ActivityListItemProps {
   activity: Activity;
@@ -11,49 +10,6 @@ interface ActivityListItemProps {
 }
 
 export function ActivityListItem({ activity, balanceRow, onLog }: ActivityListItemProps) {
-  const [quantityValue, setQuantityValue] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [justLogged, setJustLogged] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function flashSuccess() {
-    setJustLogged(true);
-    setTimeout(() => setJustLogged(false), 1500);
-  }
-
-  async function handleCheckin() {
-    setError(null);
-    setSubmitting(true);
-    try {
-      await onLog(activity.id, 1);
-      await flashSuccess();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registrazione non riuscita.');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleQuantitySubmit(e: FormEvent) {
-    e.preventDefault();
-    const parsed = Number(quantityValue.replace(',', '.'));
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      setError('Inserisci un numero maggiore di zero.');
-      return;
-    }
-    setError(null);
-    setSubmitting(true);
-    try {
-      await onLog(activity.id, parsed);
-      setQuantityValue('');
-      await flashSuccess();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registrazione non riuscita.');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-1 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
@@ -78,40 +34,7 @@ export function ActivityListItem({ activity, balanceRow, onLog }: ActivityListIt
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {error && (
-          <span role="alert" className="text-xs text-danger">
-            {error}
-          </span>
-        )}
-        {justLogged && (
-          <span className="text-sm text-state-ok" aria-live="polite">
-            ✓ registrato
-          </span>
-        )}
-        {activity.type === 'checkin' ? (
-          <Button variant="secondary" onClick={handleCheckin} loading={submitting}>
-            Registra
-          </Button>
-        ) : (
-          <form onSubmit={handleQuantitySubmit} className="flex items-center gap-2">
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="any"
-              value={quantityValue}
-              onChange={(e) => setQuantityValue(e.target.value)}
-              placeholder={activity.unit ?? ''}
-              aria-label={`Quantità per ${activity.name} (${activity.unit})`}
-              className="w-24 rounded-lg border border-border-strong bg-surface-2 px-2.5 py-2 text-sm text-text-primary"
-            />
-            <Button type="submit" variant="secondary" loading={submitting}>
-              OK
-            </Button>
-          </form>
-        )}
-      </div>
+      <QuickLogControl activity={activity} onLog={onLog} />
     </li>
   );
 }
