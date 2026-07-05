@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useServiceWorker } from './lib/registerSW';
+import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 import OnboardingPage from './pages/OnboardingPage';
 import HomePage from './pages/HomePage';
 import ActivityDetailPage from './pages/ActivityDetailPage';
@@ -46,9 +48,12 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useServiceWorker();
+
   return (
     <AuthProvider>
       <BrowserRouter>
+        <OfflineStatusBanner />
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>

@@ -2,6 +2,16 @@ import { get, set } from 'idb-keyval';
 import { supabase } from './supabase';
 
 const QUEUE_KEY = 'equilibrio-offline-log-queue';
+const QUEUE_CHANGED_EVENT = 'equilibrio-offline-queue-changed';
+
+function notifyQueueChanged(): void {
+  window.dispatchEvent(new CustomEvent(QUEUE_CHANGED_EVENT));
+}
+
+export function onQueueChanged(listener: () => void): () => void {
+  window.addEventListener(QUEUE_CHANGED_EVENT, listener);
+  return () => window.removeEventListener(QUEUE_CHANGED_EVENT, listener);
+}
 
 export interface QueuedLog {
   localId: string;
@@ -28,6 +38,7 @@ export async function enqueueOfflineLog(payload: Omit<QueuedLog, 'localId'>): Pr
   const queue = await readQueue();
   queue.push({ localId: crypto.randomUUID(), ...payload });
   await writeQueue(queue);
+  notifyQueueChanged();
 }
 
 export async function getQueuedLogs(): Promise<QueuedLog[]> {
@@ -62,5 +73,6 @@ export async function syncOfflineQueue(): Promise<{ synced: number; failed: numb
   }
 
   await writeQueue(remaining);
+  if (synced > 0) notifyQueueChanged();
   return { synced, failed: remaining.length };
 }
