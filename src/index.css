@@ -1,0 +1,141 @@
+@import 'tailwindcss';
+
+/* Font self-hosted via @fontsource: nessuna dipendenza di rete a runtime,
+   necessario per il funzionamento offline della PWA. */
+@import '@fontsource/fraunces/latin-400.css';
+@import '@fontsource/fraunces/latin-500.css';
+@import '@fontsource/fraunces/latin-600.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';
+
+@theme {
+  --font-display: 'Fraunces', serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --color-surface-0: #10201a;
+  --color-surface-1: #16281f;
+  --color-surface-2: #1e3327;
+  --color-surface-3: #28402f;
+  --color-border-subtle: #33493a;
+  --color-border-strong: #46614f;
+
+  --color-text-primary: #eef3ea;
+  --color-text-secondary: #aec2b0;
+  --color-text-muted: #7c9284;
+
+  --color-brand: #7fb88a;
+  --color-brand-strong: #9fd4a8;
+
+  --color-state-ok: #7fb88a;
+  --color-state-neglected: #c96f4a;
+  --color-state-excess: #e0a458;
+  --color-danger: #e0665c;
+
+  --color-token-sage: #7fb88a;
+  --color-token-apricot: #e0a458;
+  --color-token-rust: #c96f4a;
+  --color-token-moss: #93a84a;
+  --color-token-clay: #b0785a;
+  --color-token-sky: #6fa8b8;
+  --color-token-gold: #d4b155;
+  --color-token-plum: #9a7fb8;
+}
+
+/* ============================================================
+   Design tokens — Equilibrio
+   Palette verde foresta scuro con superfici tono su tono; accenti
+   sage / apricot / rust per gli stati di equilibrio del radar.
+   ============================================================ */
+:root {
+  color-scheme: dark;
+
+  /* superfici, dal più scuro al più chiaro */
+  --surface-0: #10201a;
+  --surface-1: #16281f;
+  --surface-2: #1e3327;
+  --surface-3: #28402f;
+  --border-subtle: #33493a;
+  --border-strong: #46614f;
+
+  /* testo */
+  --text-primary: #eef3ea;
+  --text-secondary: #aec2b0;
+  --text-muted: #7c9284;
+
+  /* accento primario del brand */
+  --brand: #7fb88a;
+  --brand-strong: #9fd4a8;
+
+  /* stati di equilibrio del radar */
+  --state-ok: #7fb88a;      /* sage */
+  --state-ok-bg: rgba(127, 184, 138, 0.16);
+  --state-neglected: #c96f4a; /* rust */
+  --state-neglected-bg: rgba(201, 111, 74, 0.18);
+  --state-excess: #e0a458;   /* apricot */
+  --state-excess-bg: rgba(224, 164, 88, 0.18);
+
+  /* palette a rotazione per i vertici/attività (8 toni, distinguibili anche
+     senza fare affidamento sul solo colore: sempre accoppiati a icona/nome) */
+  --token-sage: #7fb88a;
+  --token-apricot: #e0a458;
+  --token-rust: #c96f4a;
+  --token-moss: #93a84a;
+  --token-clay: #b0785a;
+  --token-sky: #6fa8b8;
+  --token-gold: #d4b155;
+  --token-plum: #9a7fb8;
+
+  --danger: #e0665c;
+  --focus-ring: #d7e8b8;
+
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-primary);
+  background: var(--surface-0);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100svh;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  background-image: radial-gradient(circle at 20% 0%, var(--surface-1) 0%, var(--surface-0) 60%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* Focus da tastiera sempre visibile e ad alto contrasto */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--surface-0);
+}

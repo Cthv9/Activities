@@ -1,0 +1,17 @@
+project_id = "equilibrio"
+
+[db]
+port = 54322
+
+[api]
+enabled = true
+port = 54321
+
+[auth]
+enabled = true
+# Necessario per l'accesso con PIN condiviso: crea sessioni Supabase Auth
+# anonime, che poi diventano righe family_members con auth_type='pin'.
+enable_anonymous_sign_ins = true
+
+[edge_runtime]
+enabled = true
