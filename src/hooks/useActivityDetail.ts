@@ -31,6 +31,7 @@ export function useActivityDetail(activityId: string, timeWindow: TimeWindow) {
   const load = useCallback(async () => {
     if (!family) return;
     setLoading(true);
+    setError(null);
     const [activityRes, logsRes, membersRes] = await Promise.all([
       supabase.from('activities').select('*').eq('id', activityId).maybeSingle(),
       supabase

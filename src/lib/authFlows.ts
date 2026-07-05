@@ -51,3 +51,10 @@ export async function joinWithPin(familyId: string, pin: string, displayName: st
   if (error) throw error;
   return data as string;
 }
+
+/** Imposta/cambia il PIN condiviso della famiglia. Solo l'owner può
+ * chiamarlo (verificato anche lato database in set_family_pin). */
+export async function setFamilyPin(familyId: string, pin: string): Promise<void> {
+  const { error } = await supabase.rpc('set_family_pin', { fam_id: familyId, new_pin: pin });
+  if (error) throw error;
+}

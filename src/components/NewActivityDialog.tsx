@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import type { ActivityType } from '../types/database';
 import { Button } from './ui/Button';
 import { TextField } from './ui/TextField';
@@ -9,6 +9,14 @@ interface NewActivityDialogProps {
 }
 
 export function NewActivityDialog({ onClose, onCreate }: NewActivityDialogProps) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const [name, setName] = useState('');
   const [type, setType] = useState<ActivityType>('checkin');
   const [unit, setUnit] = useState('');

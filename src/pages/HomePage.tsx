@@ -15,7 +15,7 @@ import { Button } from '../components/ui/Button';
 
 export default function HomePage() {
   const { family, member } = useAuth();
-  const { activities, loading: activitiesLoading, createActivity } = useActivities();
+  const { activities, loading: activitiesLoading, error: activitiesError, createActivity } = useActivities();
   const { logActivity } = useActivityLogs();
 
   const [timeWindow, setTimeWindow] = useState<TimeWindow>(() => presetToWindow('30d'));
@@ -23,7 +23,7 @@ export default function HomePage() {
   const [customTo, setCustomTo] = useState('');
   const [showNewActivity, setShowNewActivity] = useState(false);
 
-  const { rows, loading: balanceLoading, mostNeglected } = useBalance(timeWindow);
+  const { rows, loading: balanceLoading, error: balanceError, mostNeglected } = useBalance(timeWindow);
 
   const balanceByActivity = useMemo(() => {
     const map = new Map(rows.map((r) => [r.activity_id, r]));
@@ -88,12 +88,22 @@ export default function HomePage() {
 
       <NeglectedBanner activity={mostNeglected} />
 
+      {activitiesError && (
+        <p role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          Impossibile caricare le attività: {activitiesError}
+        </p>
+      )}
+
       {!activitiesLoading && activities.length === 0 ? (
         <EmptyState onCreate={() => setShowNewActivity(true)} />
       ) : (
         <>
           <section aria-label="Radar dell'equilibrio" className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
-            {balanceLoading ? (
+            {balanceError ? (
+              <p role="alert" className="p-8 text-center text-sm text-danger">
+                Impossibile calcolare il bilancio: {balanceError}
+              </p>
+            ) : balanceLoading ? (
               <p className="p-8 text-center text-text-secondary">Caricamento del radar…</p>
             ) : (
               <BalanceRadar rows={rows} />
