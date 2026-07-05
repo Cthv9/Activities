@@ -383,19 +383,55 @@ $$;
 
 -- ============================================================
 -- RPC: join_with_pin
--- Da chiamare DOPO che l'Edge Function verify-pin ha già validato il PIN
--- e fatto firmare in anonimo l'utente (auth.uid() è quindi già una sessione
--- anonima fresca). Crea la membership 'pin' per quella sessione.
+-- Il client deve prima ottenere una sessione anonima con
+-- supabase.auth.signInAnonymously() (auth.uid() esiste già quando questa RPC
+-- viene chiamata). La funzione stessa verifica il PIN e applica rate
+-- limiting: unico punto di validazione, non aggirabile chiamando altre RPC,
+-- perché è l'unica via per ottenere una riga family_members con auth_type='pin'.
+-- L'IP del chiamante viene letto dagli header che PostgREST espone (impostati
+-- dal proxy Supabase) solo per il rate limiting, mai salvato in chiaro.
 -- ============================================================
-create function join_with_pin(fam_id uuid, member_display_name text)
+create function join_with_pin(fam_id uuid, pin text, member_display_name text)
   returns uuid
   language plpgsql security definer set search_path = public as $$
 declare
-  new_id uuid;
+  new_id         uuid;
+  v_stored_hash  text;
+  v_client_ip    text;
+  v_ip_hash      text;
+  v_recent_fails int;
+  max_attempts   constant int := 5;
+  attempt_window constant interval := interval '10 minutes';
 begin
   if auth.uid() is null then
     raise exception 'authentication required';
   end if;
+
+  v_client_ip := coalesce(
+    (current_setting('request.headers', true)::json ->> 'x-forwarded-for'),
+    'unknown'
+  );
+  v_ip_hash := encode(digest(v_client_ip, 'sha256'), 'hex');
+
+  select count(*) into v_recent_fails
+    from pin_login_attempts
+    where pin_login_attempts.family_id = fam_id
+      and pin_login_attempts.ip_hash = v_ip_hash
+      and succeeded = false
+      and attempted_at > now() - attempt_window;
+
+  if v_recent_fails >= max_attempts then
+    raise exception 'troppi tentativi falliti, riprova più tardi';
+  end if;
+
+  select families.pin_hash into v_stored_hash from families where id = fam_id;
+
+  if v_stored_hash is null or crypt(pin, v_stored_hash) <> v_stored_hash then
+    insert into pin_login_attempts (family_id, ip_hash, succeeded) values (fam_id, v_ip_hash, false);
+    raise exception 'PIN non valido';
+  end if;
+
+  insert into pin_login_attempts (family_id, ip_hash, succeeded) values (fam_id, v_ip_hash, true);
 
   insert into family_members (family_id, user_id, display_name, role, auth_type)
   values (fam_id, auth.uid(), member_display_name, 'member', 'pin')
@@ -411,8 +447,6 @@ $$;
 -- Solo owner. L'hashing avviene qui con pgcrypto (bcrypt) cosi il PIN in
 -- chiaro non lascia mai il client se non in transito HTTPS verso questa RPC.
 -- ============================================================
-create extension if not exists pgcrypto;
-
 create function set_family_pin(fam_id uuid, new_pin text)
   returns void
   language plpgsql security definer set search_path = public as $$
