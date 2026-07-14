@@ -1,6 +1,10 @@
 -- ============================================================
 -- Equilibrio — schema iniziale
 -- ============================================================
+-- Le funzioni helper referenziano tabelle definite più avanti nel file:
+-- disattiva la validazione anticipata dei corpi funzione.
+set check_function_bodies = off;
+
 -- Estensioni necessarie per gen_random_uuid() / gen_random_bytes()
 create extension if not exists pgcrypto;
 

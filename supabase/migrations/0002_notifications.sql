@@ -19,38 +19,35 @@ alter table neglected_notifications enable row level security;
 
 -- ============================================================
 -- pg_cron / pg_net: valutazione periodica del bilancio per famiglia.
--- Entrambe le estensioni sono preinstallate sui progetti Supabase hosted
--- (schema `extensions`); l'abilitazione qui è idempotente per gli ambienti
--- locali/self-hosted che le supportano.
+-- Entrambe le estensioni sono preinstallate sui progetti Supabase hosted;
+-- l'abilitazione qui è idempotente.
 -- ============================================================
-create extension if not exists pg_cron with schema extensions;
+create extension if not exists pg_cron with schema pg_catalog;
 create extension if not exists pg_net with schema extensions;
 
 -- ============================================================
--- La schedulazione vera e propria NON viene creata da questa migration:
--- richiede l'URL della funzione Edge del progetto (che dipende dal project
--- ref, noto solo dopo la creazione del progetto Supabase) e la service_role
--- key, che non deve mai comparire in chiaro in un file versionato. Dopo il
--- deploy, esegui una tantum dal SQL editor di Supabase (o via una migration
--- locale non committata) qualcosa come:
---
---   select vault.create_secret('<SERVICE_ROLE_KEY>', 'service_role_key');
+-- La schedulazione vera e propria NON viene creata da questa migration
+-- perché dipende dall'URL del progetto (project ref). Va eseguita una
+-- tantum dal SQL editor dopo il deploy della funzione evaluate-balance:
 --
 --   select cron.schedule(
---     'evaluate-family-balance',
+--     'equilibrio-evaluate-balance',
 --     '*/30 * * * *', -- ogni 30 minuti
 --     $$
 --     select net.http_post(
 --       url := 'https://<PROJECT_REF>.supabase.co/functions/v1/evaluate-balance',
 --       headers := jsonb_build_object(
 --         'Content-Type', 'application/json',
---         'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key')
+--         'Authorization', 'Bearer <ANON_KEY>'
 --       ),
 --       body := '{}'::jsonb
 --     );
 --     $$
 --   );
 --
--- La service_role key resta così solo dentro Vault (cifrata), mai nel
--- codice o nella cronologia git.
+-- Nota: la anon key è sufficiente (e pubblica per progettazione): serve solo
+-- a superare il verify_jwt della funzione, che al suo interno usa la
+-- service_role iniettata automaticamente nell'ambiente. La funzione non
+-- accetta input pericolosi e il cooldown di 24h la rende innocua anche se
+-- invocata da terzi.
 -- ============================================================
