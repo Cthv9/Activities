@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { appUrl } from '../lib/appUrl';
 import type { FamilyMember, Invite } from '../types/database';
 
 export function useFamilyMembers() {
@@ -44,7 +45,7 @@ export function useFamilyMembers() {
         .single();
       if (insertError) throw insertError;
 
-      const redirectTo = `${window.location.origin}/onboarding?invite=${encodeURIComponent(data.token)}`;
+      const redirectTo = appUrl(`onboarding?invite=${encodeURIComponent(data.token)}`);
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: { emailRedirectTo: redirectTo, shouldCreateUser: true },

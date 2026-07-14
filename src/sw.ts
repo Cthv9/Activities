@@ -41,19 +41,26 @@ self.addEventListener('push', (event) => {
     payload = { title: 'Equilibrio', body: event.data.text() };
   }
 
+  const base = import.meta.env.BASE_URL; // '/' oppure '/Activities/'
   event.waitUntil(
     self.registration.showNotification(payload.title ?? 'Equilibrio', {
       body: payload.body ?? '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      data: { url: payload.url ?? '/' },
+      icon: `${base}icons/icon-192.png`,
+      badge: `${base}icons/icon-192.png`,
+      data: { url: payload.url ?? base },
     }),
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data as { url?: string } | undefined)?.url ?? '/';
+  const base = import.meta.env.BASE_URL;
+  let targetUrl = (event.notification.data as { url?: string } | undefined)?.url ?? base;
+  // Normalizza un eventuale percorso "root-relative" (es. '/') al base path
+  // del deploy, cosi il click apre /Activities/... e non la radice del dominio.
+  if (targetUrl.startsWith('/') && !targetUrl.startsWith(base)) {
+    targetUrl = base.replace(/\/$/, '') + targetUrl;
+  }
 
   event.waitUntil(
     (async () => {

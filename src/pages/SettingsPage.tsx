@@ -5,6 +5,7 @@ import { useFamilyMembers } from '../hooks/useFamilyMembers';
 import { useActivities } from '../hooks/useActivities';
 import { usePushSubscription } from '../hooks/usePushSubscription';
 import { setFamilyPin } from '../lib/authFlows';
+import { appUrl } from '../lib/appUrl';
 import { Button } from '../components/ui/Button';
 import { TextField } from '../components/ui/TextField';
 
@@ -210,7 +211,7 @@ function PinSection({ familyId }: { familyId: string }) {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const joinUrl = `${window.location.origin}/onboarding?join=${familyId}`;
+  const joinUrl = appUrl(`onboarding?join=${familyId}`);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

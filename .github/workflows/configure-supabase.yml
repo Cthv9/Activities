@@ -1,0 +1,72 @@
+name: Configura Supabase Auth
+
+# Esegue la configurazione dell'autenticazione Supabase che non è possibile
+# fare via SQL: abilita l'accesso anonimo (necessario per il PIN condiviso) e
+# imposta Site URL + allowlist dei redirect sull'URL di GitHub Pages (necessario
+# per i magic link / inviti via email).
+#
+# Va lanciato manualmente (Actions -> "Configura Supabase Auth" -> Run workflow).
+# Richiede un secret di repository chiamato SUPABASE_ACCESS_TOKEN con un
+# Personal Access Token Supabase (Account -> Access Tokens). Il token resta
+# cifrato nei secret di GitHub e mascherato nei log: non compare mai in chiaro.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_REF: ohrxbgdtgjejymykrwkg
+      SITE_URL: https://cthv9.github.io/Activities/
+      REDIRECT_ALLOWLIST: https://cthv9.github.io/Activities/**
+    steps:
+      - name: Verifica presenza del token
+        run: |
+          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            echo "::error::Manca il secret SUPABASE_ACCESS_TOKEN. Aggiungilo in Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Applica configurazione auth (Management API)
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$TOKEN"
+
+          payload=$(cat <<JSON
+          {
+            "site_url": "${SITE_URL}",
+            "uri_allow_list": "${REDIRECT_ALLOWLIST}",
+            "external_anonymous_users_enabled": true
+          }
+          JSON
+          )
+
+          http_code=$(curl -sS -o response.json -w "%{http_code}" \
+            -X PATCH "https://api.supabase.com/v1/projects/${PROJECT_REF}/config/auth" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "${payload}")
+
+          echo "HTTP status: ${http_code}"
+          echo "Risposta (estratto):"
+          # Mostra solo i campi rilevanti, non l'intera config
+          python3 - <<'PY'
+          import json
+          try:
+              d = json.load(open('response.json'))
+          except Exception as e:
+              print('Risposta non JSON:', open('response.json').read()[:500]); raise SystemExit(0)
+          keys = ['site_url', 'uri_allow_list', 'external_anonymous_users_enabled']
+          for k in keys:
+              if k in d:
+                  print(f'  {k} = {d[k]}')
+          PY
+
+          if [ "${http_code}" -ge 400 ]; then
+            echo "::error::La configurazione è fallita (HTTP ${http_code}). Controlla che il token sia valido."
+            exit 1
+          fi
+          echo "✅ Auth configurata: accesso anonimo abilitato, Site URL e redirect impostati."

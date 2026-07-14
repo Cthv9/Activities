@@ -13,6 +13,29 @@ il più regolare possibile.
 - **PWA**: manifest installabile, service worker con cache offline, coda di sincronizzazione IndexedDB per i log registrati offline.
 - **Notifiche**: Web Push standard (VAPID) via Edge Function, valutazione periodica via `pg_cron`.
 
+## Deploy (GitHub Pages, senza PC)
+
+Il deploy è interamente automatizzato tramite GitHub Actions: a ogni push su
+`main`, il workflow `.github/workflows/deploy.yml` builda la PWA e la pubblica
+su **GitHub Pages**. L'app è servita sotto il sottopercorso del repository:
+
+    https://cthv9.github.io/Activities/
+
+Il workflow abilita Pages da solo (`actions/configure-pages` con
+`enablement: true`), quindi non serve alcun click nella dashboard. I valori
+pubblici di build (URL Supabase, anon key, chiave VAPID pubblica) sono
+nell'`env:` del workflow: non sono segreti (la sicurezza è garantita dalle RLS).
+
+### Configurazione una tantum di Supabase Auth
+
+Due impostazioni di Supabase Auth non sono modificabili via SQL (accesso
+anonimo per il PIN, e Site URL / allowlist redirect per i magic link). Le
+applica il workflow `.github/workflows/configure-supabase.yml`, che va lanciato
+una volta a mano dopo aver aggiunto il secret di repository
+`SUPABASE_ACCESS_TOKEN` (un Personal Access Token da
+supabase.com/dashboard/account/tokens). Il token resta cifrato nei secret di
+GitHub, mascherato nei log, e non viene mai committato.
+
 ## Setup locale
 
 ```bash

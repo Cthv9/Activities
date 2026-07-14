@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMagicLink, createFamily, acceptInvite, joinWithPin } from '../lib/authFlows';
+import { appUrl } from '../lib/appUrl';
 import { Button } from '../components/ui/Button';
 import { TextField } from '../components/ui/TextField';
 
@@ -25,7 +26,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const redirectBase = useMemo(() => window.location.origin + '/onboarding', []);
+  const redirectBase = useMemo(() => appUrl('onboarding'), []);
 
   useEffect(() => {
     if (loading || member) return;

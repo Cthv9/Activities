@@ -1,0 +1,77 @@
+name: Deploy PWA su GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Permessi necessari al deploy su Pages tramite GitHub Actions.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un solo deploy alla volta; annulla quelli in coda ma lascia finire quello in corso.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dipendenze
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # L'app è servita sotto https://<utente>.github.io/Activities/
+          BASE_PATH: /Activities/
+          # Questi valori sono PUBBLICI per progettazione (la sicurezza è
+          # garantita dalle policy RLS del database, non dalla loro segretezza):
+          # la anon key e la chiave VAPID pubblica finiscono comunque nel
+          # bundle JavaScript servito al browser. I segreti veri (service_role,
+          # chiave VAPID privata) vivono solo nel Vault di Supabase.
+          VITE_SUPABASE_URL: https://ohrxbgdtgjejymykrwkg.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ocnhiZ2R0Z2planlteWtyd2tnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzA0MjgsImV4cCI6MjA5Mzg0NjQyOH0.urp-OCFxPTK7TFArH7FtZBGIqUIOreMpNyIKgSAHuVc
+          VITE_VAPID_PUBLIC_KEY: BMVluJ2oiGy2hoJajHEJLbQ6qKqcYBNb7K2gsIuOD4WbiG2_UPkd14Ys0EGX0gK-hssfv2i7u_92INZXmpywSAw
+
+      - name: SPA fallback (404.html = index.html)
+        # GitHub Pages non ha un fallback SPA: servendo index.html anche sui
+        # percorsi sconosciuti, il refresh o l'apertura diretta di una rotta
+        # (es. /Activities/onboarding) non restituisce un 404 ma carica l'app,
+        # e React Router mostra la pagina giusta.
+        run: cp dist/index.html dist/404.html
+
+      - name: Configura Pages
+        # enablement: true abilita GitHub Pages sul repo se non è già attivo,
+        # cosi il primo deploy non richiede alcun click nella dashboard.
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Carica artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

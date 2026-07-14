@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useServiceWorker } from './lib/registerSW';
+import { ROUTER_BASENAME } from './lib/appUrl';
 import { OfflineStatusBanner } from './components/OfflineStatusBanner';
 import OnboardingPage from './pages/OnboardingPage';
 
@@ -62,7 +63,7 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={ROUTER_BASENAME}>
         <OfflineStatusBanner />
         <AppRoutes />
       </BrowserRouter>
