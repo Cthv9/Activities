@@ -242,7 +242,7 @@ function PinSection({ familyId }: { familyId: string }) {
         il PIN sono attribuiti alla famiglia, non a una persona.
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <code className="rounded-lg bg-surface-2 px-2 py-1 text-xs text-text-secondary">{joinUrl}</code>
+        <code className="selectable rounded-lg bg-surface-2 px-2 py-1 text-xs text-text-secondary break-all">{joinUrl}</code>
         <Button type="button" variant="ghost" onClick={handleCopy}>
           {copied ? 'Copiato ✓' : 'Copia link'}
         </Button>

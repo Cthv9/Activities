@@ -1,31 +1,41 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Activity } from '../types/database';
+import type { LogResult } from '../hooks/useActivityLogs';
 import { Button } from './ui/Button';
 
 interface QuickLogControlProps {
   activity: Activity;
-  onLog: (activityId: string, value: number) => Promise<unknown>;
+  onLog: (activityId: string, value: number) => Promise<LogResult>;
+  onUndo: (result: LogResult) => Promise<void>;
 }
 
-export function QuickLogControl({ activity, onLog }: QuickLogControlProps) {
+const UNDO_WINDOW_MS = 6000;
+
+export function QuickLogControl({ activity, onLog, onUndo }: QuickLogControlProps) {
   const [quantityValue, setQuantityValue] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [justLogged, setJustLogged] = useState(false);
+  const [lastResult, setLastResult] = useState<LogResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  function flashSuccess() {
-    setJustLogged(true);
-    setTimeout(() => setJustLogged(false), 1500);
+  useEffect(() => () => clearTimeout(undoTimer.current), []);
+
+  function armUndo(result: LogResult) {
+    setLastResult(result);
+    clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setLastResult(null), UNDO_WINDOW_MS);
   }
 
-  async function handleCheckin() {
+  async function submit(value: number) {
     setError(null);
     setSubmitting(true);
     try {
-      await onLog(activity.id, 1);
-      flashSuccess();
+      const result = await onLog(activity.id, value);
+      armUndo(result);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registrazione non riuscita.');
+      return false;
     } finally {
       setSubmitting(false);
     }
@@ -38,16 +48,18 @@ export function QuickLogControl({ activity, onLog }: QuickLogControlProps) {
       setError('Inserisci un numero maggiore di zero.');
       return;
     }
-    setError(null);
-    setSubmitting(true);
+    if (await submit(parsed)) setQuantityValue('');
+  }
+
+  async function handleUndo() {
+    if (!lastResult) return;
+    clearTimeout(undoTimer.current);
+    const toUndo = lastResult;
+    setLastResult(null);
     try {
-      await onLog(activity.id, parsed);
-      setQuantityValue('');
-      flashSuccess();
+      await onUndo(toUndo);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registrazione non riuscita.');
-    } finally {
-      setSubmitting(false);
+      setError(err instanceof Error ? err.message : 'Annullamento non riuscito.');
     }
   }
 
@@ -58,13 +70,20 @@ export function QuickLogControl({ activity, onLog }: QuickLogControlProps) {
           {error}
         </span>
       )}
-      {justLogged && (
-        <span className="text-sm text-state-ok" aria-live="polite">
+      {lastResult && (
+        <span className="flex items-center gap-1.5 text-sm text-state-ok" aria-live="polite">
           ✓ registrato
+          <button
+            type="button"
+            onClick={handleUndo}
+            className="rounded px-1 font-medium text-text-secondary underline hover:text-text-primary"
+          >
+            Annulla
+          </button>
         </span>
       )}
       {activity.type === 'checkin' ? (
-        <Button variant="secondary" onClick={handleCheckin} loading={submitting}>
+        <Button variant="secondary" onClick={() => submit(1)} loading={submitting}>
           Registra
         </Button>
       ) : (

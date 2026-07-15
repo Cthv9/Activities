@@ -110,6 +110,23 @@ body {
   background: var(--surface-0);
   background-image: radial-gradient(circle at 20% 0%, var(--surface-1) 0%, var(--surface-0) 60%);
   background-attachment: fixed;
+
+  /* PWA: la UI non deve comportarsi come una pagina web (long-press che
+     seleziona/copia il testo, menu contestuale iOS). Disabilitiamo selezione
+     e callout di default e li riattiviamo dove servono (input e contenuti
+     realmente selezionabili, marcati .selectable). */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+[contenteditable='true'],
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 h1,

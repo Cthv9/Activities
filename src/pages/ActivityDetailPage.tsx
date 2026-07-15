@@ -13,7 +13,7 @@ export default function ActivityDetailPage() {
   const [timeWindow, setTimeWindow] = useState<TimeWindow>(() => presetToWindow('30d'));
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const { logActivity } = useActivityLogs();
+  const { logActivity, undoLog } = useActivityLogs();
 
   const { activity, dailySeries, stats, memberBreakdown, loading, error } = useActivityDetail(
     activityId ?? '',
@@ -64,7 +64,7 @@ export default function ActivityDetailPage() {
             </p>
           </div>
         </div>
-        <QuickLogControl activity={activity} onLog={logActivity} />
+        <QuickLogControl activity={activity} onLog={logActivity} onUndo={undoLog} />
       </header>
 
       <div className="flex flex-col gap-2">

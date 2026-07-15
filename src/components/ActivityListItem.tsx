@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom';
 import type { Activity, FamilyBalanceRow } from '../types/database';
+import type { LogResult } from '../hooks/useActivityLogs';
 import { statusColorVar, STATUS_LABEL, tokenToVar } from '../lib/colors';
 import { QuickLogControl } from './QuickLogControl';
 
 interface ActivityListItemProps {
   activity: Activity;
   balanceRow?: FamilyBalanceRow;
-  onLog: (activityId: string, value: number) => Promise<unknown>;
+  onLog: (activityId: string, value: number) => Promise<LogResult>;
+  onUndo: (result: LogResult) => Promise<void>;
 }
 
-export function ActivityListItem({ activity, balanceRow, onLog }: ActivityListItemProps) {
+export function ActivityListItem({ activity, balanceRow, onLog, onUndo }: ActivityListItemProps) {
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-1 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
@@ -34,7 +36,7 @@ export function ActivityListItem({ activity, balanceRow, onLog }: ActivityListIt
         </div>
       </div>
 
-      <QuickLogControl activity={activity} onLog={onLog} />
+      <QuickLogControl activity={activity} onLog={onLog} onUndo={onUndo} />
     </li>
   );
 }

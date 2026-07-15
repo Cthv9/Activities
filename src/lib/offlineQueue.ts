@@ -34,11 +34,24 @@ async function writeQueue(queue: QueuedLog[]): Promise<void> {
   await set(QUEUE_KEY, queue);
 }
 
-export async function enqueueOfflineLog(payload: Omit<QueuedLog, 'localId'>): Promise<void> {
+export async function enqueueOfflineLog(payload: Omit<QueuedLog, 'localId'>): Promise<string> {
   const queue = await readQueue();
-  queue.push({ localId: crypto.randomUUID(), ...payload });
+  const localId = crypto.randomUUID();
+  queue.push({ localId, ...payload });
   await writeQueue(queue);
   notifyQueueChanged();
+  return localId;
+}
+
+/** Rimuove dalla coda un log ancora non sincronizzato (usato per "Annulla"
+ * su un log registrato offline). Restituisce true se era ancora in coda. */
+export async function removeQueuedLog(localId: string): Promise<boolean> {
+  const queue = await readQueue();
+  const next = queue.filter((item) => item.localId !== localId);
+  if (next.length === queue.length) return false;
+  await writeQueue(next);
+  notifyQueueChanged();
+  return true;
 }
 
 export async function getQueuedLogs(): Promise<QueuedLog[]> {
