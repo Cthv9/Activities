@@ -18,6 +18,10 @@ export default function OnboardingPage() {
   const wantsCreate = searchParams.get('create') === '1';
 
   const [mode, setMode] = useState<Mode>('hub');
+  // Intento del magic link: 'create' apre la creazione di un nuovo spazio al
+  // ritorno; 'login' riporta semplicemente alla home (dove, se hai già uno
+  // spazio, entri direttamente).
+  const [emailIntent, setEmailIntent] = useState<'create' | 'login'>('create');
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [familyName, setFamilyName] = useState('');
@@ -59,7 +63,9 @@ export default function OnboardingPage() {
     try {
       const redirectTo = inviteToken
         ? `${redirectBase}?invite=${encodeURIComponent(inviteToken)}`
-        : `${redirectBase}?create=1`;
+        : emailIntent === 'login'
+          ? appUrl('') // torna alla home: se hai già uno spazio, entri diretto
+          : `${redirectBase}?create=1`;
       await sendMagicLink(email, redirectTo);
       setMode('awaiting-link');
     } catch (err) {
@@ -132,12 +138,29 @@ export default function OnboardingPage() {
         <section className="flex flex-col gap-4">
           <button
             type="button"
-            onClick={() => setMode('email-form')}
+            onClick={() => {
+              setEmailIntent('login');
+              setMode('email-form');
+            }}
+            className="rounded-xl border border-border-strong bg-surface-1 p-5 text-left transition-colors hover:bg-surface-2"
+          >
+            <h2 className="font-display text-xl">Accedi</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              Hai già un account? Entra con un link via email.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEmailIntent('create');
+              setMode('email-form');
+            }}
             className="rounded-xl border border-border-strong bg-surface-1 p-5 text-left transition-colors hover:bg-surface-2"
           >
             <h2 className="font-display text-xl">Crea un nuovo spazio</h2>
             <p className="mt-1 text-sm text-text-secondary">
-              Ricevi un link di accesso via email e inizia da zero.
+              Nuovo qui? Ricevi un link via email e inizia da zero.
             </p>
           </button>
 
@@ -160,6 +183,12 @@ export default function OnboardingPage() {
 
       {mode === 'email-form' && (
         <form onSubmit={handleSendMagicLink} className="flex flex-col gap-4">
+          <h2 className="font-display text-xl">{emailIntent === 'login' ? 'Accedi' : 'Crea un nuovo spazio'}</h2>
+          <p className="-mt-2 text-sm text-text-secondary">
+            {emailIntent === 'login'
+              ? 'Inserisci l’email del tuo account: ti mandiamo un link per rientrare.'
+              : 'Ti mandiamo un link via email per iniziare.'}
+          </p>
           <TextField
             label="Indirizzo email"
             type="email"
