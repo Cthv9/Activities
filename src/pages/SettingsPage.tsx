@@ -112,7 +112,7 @@ function MembersSection({
   onRemove: (id: string) => Promise<void>;
 }) {
   return (
-    <Section title="Membri della famiglia">
+    <Section title="Membri dello spazio">
       <ul className="flex flex-col gap-2">
         {members.map((m) => (
           <li key={m.id} className="flex items-center justify-between text-sm">
@@ -239,7 +239,7 @@ function PinSection({ familyId }: { familyId: string }) {
     <Section title="PIN condiviso">
       <p className="text-sm text-text-secondary">
         Condividi questo link e il PIN con chi vuoi che acceda senza creare un account personale. I log fatti con
-        il PIN sono attribuiti alla famiglia, non a una persona.
+        il PIN sono attribuiti allo spazio, non a una persona.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <code className="selectable rounded-lg bg-surface-2 px-2 py-1 text-xs text-text-secondary break-all">{joinUrl}</code>

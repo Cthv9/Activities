@@ -11,10 +11,11 @@ import { BalanceRadar } from '../components/BalanceRadar';
 import { StatusLegend } from '../components/StatusLegend';
 import { ActivityListItem } from '../components/ActivityListItem';
 import { NewActivityDialog } from '../components/NewActivityDialog';
+import { SpaceSwitcher } from '../components/SpaceSwitcher';
 import { Button } from '../components/ui/Button';
 
 export default function HomePage() {
-  const { family, member, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { activities, loading: activitiesLoading, error: activitiesError, createActivity } = useActivities();
   const { logActivity, undoLog } = useActivityLogs();
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -39,12 +40,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6">
       <header className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="truncate font-display text-2xl">{family?.name}</h1>
-          <p className="truncate text-sm text-text-secondary">
-            {member?.display_name} · {member?.auth_type === 'pin' ? 'accesso condiviso' : 'account personale'}
-          </p>
-        </div>
+        <SpaceSwitcher />
         <div className="flex shrink-0 items-center gap-2">
           {confirmSignOut ? (
             <div className="flex items-center gap-1.5 text-sm">
@@ -176,7 +172,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
     <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border-strong p-10 text-center">
       <p className="font-display text-xl">Il radar è ancora vuoto</p>
       <p className="max-w-sm text-sm text-text-secondary">
-        Crea la prima attività della famiglia: ogni attività aggiunge un vertice al radar dell'equilibrio.
+        Crea la prima attività di questo spazio: ogni attività aggiunge un vertice al radar dell'equilibrio.
       </p>
       <Button onClick={onCreate}>Crea la prima attività</Button>
     </div>

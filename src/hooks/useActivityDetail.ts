@@ -18,7 +18,7 @@ export interface MemberBreakdownRow {
   quantity: number;
 }
 
-const SHARED_PIN_LABEL = 'Famiglia (PIN condiviso)';
+const SHARED_PIN_LABEL = 'Spazio (PIN condiviso)';
 
 export function useActivityDetail(activityId: string, timeWindow: TimeWindow) {
   const { family } = useAuth();

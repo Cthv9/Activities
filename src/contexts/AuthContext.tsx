@@ -1,55 +1,77 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Family, FamilyMember } from '../types/database';
 
+/** Una membership dell'utente: la coppia (riga membro, spazio). Un utente può
+ * appartenere a più spazi contemporaneamente (Casa, Lavoro, …). */
+export interface Membership {
+  member: FamilyMember;
+  family: Family;
+}
+
 interface AuthContextValue {
   session: Session | null;
-  member: FamilyMember | null;
-  family: Family | null;
+  memberships: Membership[];
+  /** Spazio attivo (quello mostrato dalla dashboard). */
+  activeFamily: Family | null;
+  activeMember: FamilyMember | null;
   loading: boolean;
-  refreshMembership: () => Promise<void>;
+  setActiveSpace: (familyId: string) => void;
+  refreshMemberships: () => Promise<void>;
   signOut: () => Promise<void>;
+
+  // Alias di comodo verso lo spazio attivo, usati in tutta l'app.
+  family: Family | null;
+  member: FamilyMember | null;
+  refreshMembership: () => Promise<void>;
 }
+
+const ACTIVE_SPACE_KEY = 'equilibrio-active-space';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [member, setMember] = useState<FamilyMember | null>(null);
-  const [family, setFamily] = useState<Family | null>(null);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [activeFamilyId, setActiveFamilyId] = useState<string | null>(
+    () => localStorage.getItem(ACTIVE_SPACE_KEY),
+  );
   const [loading, setLoading] = useState(true);
 
-  const loadMembership = useCallback(async (userId: string | undefined) => {
+  const loadMemberships = useCallback(async (userId: string | undefined) => {
     if (!userId) {
-      setMember(null);
-      setFamily(null);
+      setMemberships([]);
       return;
     }
-    const { data: memberRow } = await supabase
+    const { data: memberRows } = await supabase
       .from('family_members')
       .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+      .eq('user_id', userId);
 
-    if (!memberRow) {
-      setMember(null);
-      setFamily(null);
+    if (!memberRows || memberRows.length === 0) {
+      setMemberships([]);
       return;
     }
-    setMember(memberRow);
 
-    const { data: familyRow } = await supabase
-      .from('families')
-      .select('*')
-      .eq('id', memberRow.family_id)
-      .maybeSingle();
-    setFamily(familyRow ?? null);
+    const familyIds = memberRows.map((m) => m.family_id);
+    const { data: familyRows } = await supabase.from('families').select('*').in('id', familyIds);
+    const familyById = new Map((familyRows ?? []).map((f) => [f.id, f]));
+
+    const list: Membership[] = memberRows
+      .map((m) => {
+        const fam = familyById.get(m.family_id);
+        return fam ? { member: m, family: fam } : null;
+      })
+      .filter((x): x is Membership => x !== null)
+      .sort((a, b) => a.family.created_at.localeCompare(b.family.created_at));
+
+    setMemberships(list);
   }, []);
 
-  const refreshMembership = useCallback(async () => {
-    await loadMembership(session?.user.id);
-  }, [loadMembership, session]);
+  const refreshMemberships = useCallback(async () => {
+    await loadMemberships(session?.user.id);
+  }, [loadMemberships, session]);
 
   useEffect(() => {
     let mounted = true;
@@ -57,14 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
       setSession(data.session);
-      await loadMembership(data.session?.user.id);
+      await loadMemberships(data.session?.user.id);
       setLoading(false);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
       setLoading(true);
-      await loadMembership(newSession?.user.id);
+      await loadMemberships(newSession?.user.id);
       setLoading(false);
     });
 
@@ -72,19 +94,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       sub.subscription.unsubscribe();
     };
-  }, [loadMembership]);
+  }, [loadMemberships]);
+
+  // Determina lo spazio attivo: quello salvato se ancora valido, altrimenti il
+  // primo disponibile. Persiste la scelta per i reload successivi.
+  const active = useMemo<Membership | null>(() => {
+    if (memberships.length === 0) return null;
+    return memberships.find((m) => m.family.id === activeFamilyId) ?? memberships[0];
+  }, [memberships, activeFamilyId]);
+
+  useEffect(() => {
+    if (active && active.family.id !== activeFamilyId) {
+      setActiveFamilyId(active.family.id);
+      localStorage.setItem(ACTIVE_SPACE_KEY, active.family.id);
+    }
+  }, [active, activeFamilyId]);
+
+  const setActiveSpace = useCallback((familyId: string) => {
+    setActiveFamilyId(familyId);
+    localStorage.setItem(ACTIVE_SPACE_KEY, familyId);
+  }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-    setMember(null);
-    setFamily(null);
+    setMemberships([]);
+    setActiveFamilyId(null);
+    localStorage.removeItem(ACTIVE_SPACE_KEY);
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ session, member, family, loading, refreshMembership, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextValue = {
+    session,
+    memberships,
+    activeFamily: active?.family ?? null,
+    activeMember: active?.member ?? null,
+    loading,
+    setActiveSpace,
+    refreshMemberships,
+    signOut,
+    // alias
+    family: active?.family ?? null,
+    member: active?.member ?? null,
+    refreshMembership: refreshMemberships,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

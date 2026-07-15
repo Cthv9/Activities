@@ -78,7 +78,7 @@ export default function OnboardingPage() {
       await refreshMembership();
       navigate('/', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Creazione famiglia non riuscita.');
+      setError(err instanceof Error ? err.message : 'Creazione dello spazio non riuscita.');
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +135,7 @@ export default function OnboardingPage() {
             onClick={() => setMode('email-form')}
             className="rounded-xl border border-border-strong bg-surface-1 p-5 text-left transition-colors hover:bg-surface-2"
           >
-            <h2 className="font-display text-xl">Crea una nuova famiglia</h2>
+            <h2 className="font-display text-xl">Crea un nuovo spazio</h2>
             <p className="mt-1 text-sm text-text-secondary">
               Ricevi un link di accesso via email e inizia da zero.
             </p>
@@ -148,7 +148,7 @@ export default function OnboardingPage() {
           >
             <h2 className="font-display text-xl">Ho un PIN condiviso</h2>
             <p className="mt-1 text-sm text-text-secondary">
-              Un membro della tua famiglia ti ha dato un codice famiglia e un PIN.
+              Qualcuno ti ha dato un codice spazio e un PIN.
             </p>
           </button>
 
@@ -187,15 +187,15 @@ export default function OnboardingPage() {
 
       {mode === 'create-family' && (
         <form onSubmit={handleCreateFamily} className="flex flex-col gap-4">
-          <h2 className="font-display text-xl">Crea la tua famiglia</h2>
+          <h2 className="font-display text-xl">Crea il tuo spazio</h2>
           <TextField
-            label="Nome famiglia"
+            label="Nome dello spazio"
             required
             autoFocus
             maxLength={60}
             value={familyName}
             onChange={(e) => setFamilyName(e.target.value)}
-            placeholder="Famiglia Rossi"
+            placeholder="Es. Casa"
           />
           <TextField
             label="Il tuo nome"
@@ -206,14 +206,14 @@ export default function OnboardingPage() {
             placeholder="Come vuoi essere chiamato/a"
           />
           <Button type="submit" loading={submitting}>
-            Crea famiglia
+            Crea spazio
           </Button>
         </form>
       )}
 
       {mode === 'accept-invite' && (
         <form onSubmit={handleAcceptInvite} className="flex flex-col gap-4">
-          <h2 className="font-display text-xl">Unisciti alla famiglia</h2>
+          <h2 className="font-display text-xl">Unisciti allo spazio</h2>
           <TextField
             label="Il tuo nome"
             required
@@ -234,7 +234,7 @@ export default function OnboardingPage() {
           <h2 className="font-display text-xl">Accedi con PIN condiviso</h2>
           {!joinFamilyId && (
             <TextField
-              label="Codice famiglia"
+              label="Codice spazio"
               required
               autoFocus
               value={pinFamilyId}
@@ -258,7 +258,7 @@ export default function OnboardingPage() {
             maxLength={40}
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            hint="I log fatti con il PIN condiviso sono attribuiti alla famiglia, non a una persona."
+            hint="I log fatti con il PIN condiviso sono attribuiti allo spazio, non a una persona."
           />
           <Button type="submit" loading={submitting}>
             Entra
