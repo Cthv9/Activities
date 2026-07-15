@@ -39,11 +39,14 @@ Backlog di miglioramenti, raggruppati per tema e priorità.
 
 ## 🔵 Prodotto — modello a contenitori
 
-- [ ] **Da "famiglia" a "contenitore/spazio"**: un utente ha più dashboard
-      (Casa, Lavoro, Palestra…), ognuna con le sue attività, e uno switcher per
-      cambiare contesto. Lo schema già supporta un utente in più "famiglie":
-      serve rinominare il concetto, aggiungere lo switcher e sistemare il carico
-      della membership (vedi crash multi-famiglia).
+- [x] **Da "famiglia" a "Spazio"**: multi-spazio con switcher nell'header,
+      creazione di nuovi spazi in-app, fix del crash multi-membership, copy
+      aggiornata. (fatto)
+- [ ] **Unirsi a un ALTRO spazio via PIN/invito da loggati**: oggi il join via
+      PIN parte da una sessione anonima; per un utente già autenticato che vuole
+      aggiungere uno spazio condiviso serve gestire l'attribuzione (entra come
+      membro 'pin' anonimo di quello spazio?) ed evitare il conflitto con la
+      sessione esistente. Aggiungere anche l'accettazione inviti da loggati.
 - [ ] **Modalità privacy per contenitore**: un contenitore può essere nascosto /
       protetto (es. conteggi personali). Si lega alla cifratura E2E qui sotto e a
       un lock (PIN/biometria) per aprirlo.
