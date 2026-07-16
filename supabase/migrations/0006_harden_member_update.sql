@@ -34,6 +34,7 @@ begin
 end;
 $$;
 
+drop trigger if exists trg_guard_family_member_update on family_members;
 create trigger trg_guard_family_member_update
   before update on family_members
   for each row execute function guard_family_member_update();

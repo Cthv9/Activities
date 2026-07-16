@@ -1,0 +1,58 @@
+name: Applica migration Supabase
+
+# Applica al database di produzione le migration elencate in PENDING_MIGRATIONS,
+# tramite la Management API di Supabase. Serve quando le migration non possono
+# essere applicate per altra via. I file elencati DEVONO essere idempotenti
+# (create or replace / drop if exists / alter): il workflow può rigirare più
+# volte sullo stesso file senza effetti collaterali.
+#
+# Si avvia SOLO manualmente (Actions -> "Applica migration Supabase" ->
+# Run workflow): ogni modifica al database di produzione richiede quindi
+# un'azione esplicita del proprietario del repo. Richiede il secret
+# SUPABASE_ACCESS_TOKEN (lo stesso usato da configure-supabase.yml).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_REF: ohrxbgdtgjejymykrwkg
+      # Elenco (separato da spazi) delle migration da applicare a ogni run.
+      # Aggiornare quando se ne aggiungono di nuove non ancora applicate.
+      PENDING_MIGRATIONS: supabase/migrations/0006_harden_member_update.sql
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verifica presenza del token
+        run: |
+          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            echo "::error::Manca il secret SUPABASE_ACCESS_TOKEN (Settings -> Secrets and variables -> Actions). Se era stato revocato, generane uno nuovo su supabase.com/dashboard/account/tokens e ricrealo."
+            exit 1
+          fi
+
+      - name: Applica le migration in sospeso
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$TOKEN"
+
+          for file in ${PENDING_MIGRATIONS}; do
+            echo "=== Applico ${file} ==="
+            body=$(jq -Rs '{query: .}' "${file}")
+            http_code=$(curl -sS -o response.json -w "%{http_code}" \
+              -X POST "https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query" \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "${body}")
+            echo "HTTP ${http_code}"
+            if [ "${http_code}" -ge 400 ]; then
+              echo "::error::Migration ${file} fallita (HTTP ${http_code}):"
+              cat response.json
+              exit 1
+            fi
+            echo "✅ ${file} applicata."
+          done
