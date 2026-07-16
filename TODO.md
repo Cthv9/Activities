@@ -60,8 +60,8 @@ Backlog di miglioramenti, raggruppati per tema e priorità.
 
 ## 🎨 Redesign visivo
 
-- [ ] **Restyle "liquid glass" chiaro**: tema più moderno, luminoso, con
-      superfici translucide. Da fare DOPO il modello a contenitori (per non
-      ridisegnare la navigazione due volte). Attenzione a contrasto/accessibilità
-      del glass e ai colori del radar su fondo chiaro (vanno ritarati).
-      Valutare tema chiaro di default + dark opzionale (theme-aware).
+- [x] **Restyle "liquid glass" chiaro**: tema chiaro di default + scuro
+      opzionale (theme-aware), superfici in vetro, radar ritarato, toggle nelle
+      Impostazioni. (fatto)
+- [ ] Rifiniture redesign: header sticky in vetro, transizioni tema più morbide,
+      verifica contrasto AA su tutti i testi in tema chiaro.
