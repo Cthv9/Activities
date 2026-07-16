@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { useActivityLogs } from '../hooks/useActivityLogs';
 import { useBalance } from '../hooks/useBalance';
@@ -8,6 +7,7 @@ import { presetToWindow, customWindow, type TimeWindow } from '../lib/timeWindow
 import { TimeWindowSelector } from '../components/TimeWindowSelector';
 import { NeglectedBanner } from '../components/NeglectedBanner';
 import { BalanceRadar } from '../components/BalanceRadar';
+import { BalanceBars } from '../components/BalanceBars';
 import { StatusLegend } from '../components/StatusLegend';
 import { ActivityListItem } from '../components/ActivityListItem';
 import { NewActivityDialog } from '../components/NewActivityDialog';
@@ -15,10 +15,8 @@ import { SpaceSwitcher } from '../components/SpaceSwitcher';
 import { Button } from '../components/ui/Button';
 
 export default function HomePage() {
-  const { signOut } = useAuth();
   const { activities, loading: activitiesLoading, error: activitiesError, createActivity } = useActivities();
   const { logActivity, undoLog } = useActivityLogs();
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
 
   const [timeWindow, setTimeWindow] = useState<TimeWindow>(() => presetToWindow('30d'));
   const [customFrom, setCustomFrom] = useState('');
@@ -41,43 +39,13 @@ export default function HomePage() {
     <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6">
       <header className="flex items-center justify-between gap-2">
         <SpaceSwitcher />
-        <div className="flex shrink-0 items-center gap-2">
-          {confirmSignOut ? (
-            <div className="flex items-center gap-1.5 text-sm">
-              <button
-                type="button"
-                onClick={signOut}
-                className="rounded-full bg-danger/90 px-3 py-1.5 font-medium text-surface-0 hover:bg-danger"
-              >
-                Esci
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmSignOut(false)}
-                className="rounded-full px-2 py-1.5 text-text-secondary hover:text-text-primary"
-              >
-                Annulla
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmSignOut(true)}
-              className="rounded-full border border-border-strong p-2 text-text-secondary hover:text-text-primary"
-              aria-label="Esci"
-              title="Esci"
-            >
-              ⎋
-            </button>
-          )}
-          <Link
-            to="/settings"
-            className="rounded-full border border-border-strong p-2 text-text-secondary hover:text-text-primary"
-            aria-label="Impostazioni"
-          >
-            ⚙️
-          </Link>
-        </div>
+        <Link
+          to="/settings"
+          className="shrink-0 rounded-full border border-border-strong p-2 text-text-secondary hover:text-text-primary"
+          aria-label="Impostazioni"
+        >
+          ⚙️
+        </Link>
       </header>
 
       <div className="flex flex-col gap-2">
@@ -132,6 +100,8 @@ export default function HomePage() {
               </p>
             ) : balanceLoading ? (
               <p className="p-8 text-center text-text-secondary">Caricamento del radar…</p>
+            ) : rows.length < 3 ? (
+              <BalanceBars rows={rows} />
             ) : (
               <BalanceRadar rows={rows} />
             )}
