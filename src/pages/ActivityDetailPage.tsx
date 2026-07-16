@@ -111,12 +111,12 @@ export default function ActivityDetailPage() {
         )}
       </section>
 
-      <section className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
+      <section className="glass rounded-2xl p-4">
         <h2 className="mb-2 font-display text-lg">Andamento</h2>
         <ActivityTimeSeries data={dailySeries} type={activity.type} />
       </section>
 
-      <section className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
+      <section className="glass rounded-2xl p-4">
         <h2 className="mb-3 font-display text-lg">Chi ha contribuito</h2>
         {memberBreakdown.length === 0 ? (
           <p className="text-sm text-text-secondary">Nessuna registrazione in questa finestra temporale.</p>
@@ -140,7 +140,7 @@ export default function ActivityDetailPage() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-1 p-4">
+    <div className="glass rounded-xl p-4">
       <p className="text-2xl font-semibold text-text-primary">{value}</p>
       <p className="text-xs text-text-secondary">{label}</p>
     </div>

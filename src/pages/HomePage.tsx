@@ -125,7 +125,7 @@ export default function HomePage() {
         <EmptyState onCreate={() => setShowNewActivity(true)} />
       ) : (
         <>
-          <section aria-label="Radar dell'equilibrio" className="rounded-2xl border border-border-subtle bg-surface-1 p-4">
+          <section aria-label="Radar dell'equilibrio" className="glass rounded-2xl p-4">
             {balanceError ? (
               <p role="alert" className="p-8 text-center text-sm text-danger">
                 Impossibile calcolare il bilancio: {balanceError}

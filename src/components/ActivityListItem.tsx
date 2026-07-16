@@ -13,7 +13,7 @@ interface ActivityListItemProps {
 
 export function ActivityListItem({ activity, balanceRow, onLog, onUndo }: ActivityListItemProps) {
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-1 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <li className="glass flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
         <span
           aria-hidden

@@ -6,6 +6,7 @@ import { useActivities } from '../hooks/useActivities';
 import { usePushSubscription } from '../hooks/usePushSubscription';
 import { setFamilyPin } from '../lib/authFlows';
 import { appUrl } from '../lib/appUrl';
+import { getStoredTheme, applyTheme, type Theme } from '../lib/theme';
 import { Button } from '../components/ui/Button';
 import { TextField } from '../components/ui/TextField';
 
@@ -29,6 +30,8 @@ export default function SettingsPage() {
       </Link>
       <h1 className="font-display text-2xl">Impostazioni</h1>
 
+      <AppearanceSection />
+
       <ProfileSection displayName={member?.display_name ?? ''} onRename={renameSelf} onSignOut={signOut} />
 
       <MembersSection
@@ -51,10 +54,48 @@ export default function SettingsPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-surface-1 p-4">
+    <section className="glass flex flex-col gap-3 rounded-2xl p-4">
       <h2 className="font-display text-lg">{title}</h2>
       {children}
     </section>
+  );
+}
+
+function AppearanceSection() {
+  const [theme, setTheme] = useState<Theme>(getStoredTheme);
+
+  function choose(next: Theme) {
+    setTheme(next);
+    applyTheme(next);
+  }
+
+  const options: { value: Theme; label: string; hint: string }[] = [
+    { value: 'light', label: 'Chiaro', hint: 'Liquid glass luminoso' },
+    { value: 'dark', label: 'Scuro', hint: 'Verde foresta' },
+  ];
+
+  return (
+    <Section title="Aspetto">
+      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tema">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={theme === opt.value}
+            onClick={() => choose(opt.value)}
+            className={`flex flex-col gap-0.5 rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
+              theme === opt.value
+                ? 'border-brand bg-brand/10 text-text-primary'
+                : 'border-border-strong text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            <span className="font-medium">{opt.label}</span>
+            <span className="text-xs text-text-muted">{opt.hint}</span>
+          </button>
+        ))}
+      </div>
+    </Section>
   );
 }
 

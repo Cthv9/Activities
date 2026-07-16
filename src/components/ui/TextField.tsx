@@ -21,7 +21,7 @@ export function TextField({ label, error, hint, id, className = '', ...rest }: T
         id={fieldId}
         aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
         aria-invalid={!!error}
-        className={`rounded-lg border border-border-strong bg-surface-1 px-3 py-2.5 text-text-primary
+        className={`rounded-lg border border-border-strong bg-surface-3 px-3 py-2.5 text-text-primary
           placeholder:text-text-muted focus-visible:border-brand ${className}`}
         {...rest}
       />

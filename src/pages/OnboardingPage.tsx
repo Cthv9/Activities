@@ -142,7 +142,7 @@ export default function OnboardingPage() {
               setEmailIntent('login');
               setMode('email-form');
             }}
-            className="rounded-xl border border-border-strong bg-surface-1 p-5 text-left transition-colors hover:bg-surface-2"
+            className="glass rounded-xl p-5 text-left transition-colors hover:bg-surface-2"
           >
             <h2 className="font-display text-xl">Accedi</h2>
             <p className="mt-1 text-sm text-text-secondary">
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
               setEmailIntent('create');
               setMode('email-form');
             }}
-            className="rounded-xl border border-border-strong bg-surface-1 p-5 text-left transition-colors hover:bg-surface-2"
+            className="glass rounded-xl p-5 text-left transition-colors hover:bg-surface-2"
           >
             <h2 className="font-display text-xl">Crea un nuovo spazio</h2>
             <p className="mt-1 text-sm text-text-secondary">
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
           <button
             type="button"
             onClick={() => setMode('join-pin')}
-            className="rounded-xl border border-border-strong bg-surface-1 p-5 text-left transition-colors hover:bg-surface-2"
+            className="glass rounded-xl p-5 text-left transition-colors hover:bg-surface-2"
           >
             <h2 className="font-display text-xl">Ho un PIN condiviso</h2>
             <p className="mt-1 text-sm text-text-secondary">

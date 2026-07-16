@@ -51,7 +51,7 @@ export function SpaceSwitcher() {
       {open && (
         <div
           role="menu"
-          className="absolute left-0 z-40 mt-2 w-64 overflow-hidden rounded-xl border border-border-strong bg-surface-2 shadow-xl"
+          className="glass-strong absolute left-0 z-40 mt-2 w-64 overflow-hidden rounded-xl"
         >
           {hasMultiple && (
             <ul className="max-h-64 overflow-y-auto py-1">

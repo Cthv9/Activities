@@ -50,7 +50,7 @@ export function NewActivityDialog({ onClose, onCreate }: NewActivityDialogProps)
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-2xl border border-border-strong bg-surface-1 p-6"
+        className="glass-strong w-full max-w-sm rounded-2xl p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="new-activity-title" className="font-display text-xl">
