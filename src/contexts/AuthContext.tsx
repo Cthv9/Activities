@@ -44,9 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMemberships([]);
       return;
     }
+    // Un solo round-trip: la famiglia viene incorporata nella riga membro
+    // tramite il resource embedding di PostgREST (FK family_members.family_id).
+    // Prima erano due query sequenziali (membri, poi famiglie) e questo pesava
+    // sulla fase di avvio bloccante.
     const { data: memberRows } = await supabase
       .from('family_members')
-      .select('*')
+      .select('*, families(*)')
       .eq('user_id', userId);
 
     if (!memberRows || memberRows.length === 0) {
@@ -54,14 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const familyIds = memberRows.map((m) => m.family_id);
-    const { data: familyRows } = await supabase.from('families').select('*').in('id', familyIds);
-    const familyById = new Map((familyRows ?? []).map((f) => [f.id, f]));
-
     const list: Membership[] = memberRows
-      .map((m) => {
-        const fam = familyById.get(m.family_id);
-        return fam ? { member: m, family: fam } : null;
+      .map((row) => {
+        const { families, ...member } = row as FamilyMember & { families: Family | null };
+        return families ? { member: member as FamilyMember, family: families } : null;
       })
       .filter((x): x is Membership => x !== null)
       .sort((a, b) => a.family.created_at.localeCompare(b.family.created_at));

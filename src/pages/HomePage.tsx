@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useActivities } from '../hooks/useActivities';
 import { useActivityLogs } from '../hooks/useActivityLogs';
@@ -6,13 +6,19 @@ import { useBalance } from '../hooks/useBalance';
 import { presetToWindow, customWindow, type TimeWindow } from '../lib/timeWindow';
 import { TimeWindowSelector } from '../components/TimeWindowSelector';
 import { NeglectedBanner } from '../components/NeglectedBanner';
-import { BalanceRadar } from '../components/BalanceRadar';
 import { BalanceBars } from '../components/BalanceBars';
 import { StatusLegend } from '../components/StatusLegend';
 import { ActivityListItem } from '../components/ActivityListItem';
 import { NewActivityDialog } from '../components/NewActivityDialog';
 import { SpaceSwitcher } from '../components/SpaceSwitcher';
 import { Button } from '../components/ui/Button';
+
+// Il radar è l'unico consumatore di recharts (~250 KB): caricato on-demand solo
+// quando serve davvero (dalla terza attività). Sotto le 3 attività si mostrano
+// le barre in CSS puro, quindi recharts non entra mai nel percorso di avvio.
+const BalanceRadar = lazy(() =>
+  import('../components/BalanceRadar').then((m) => ({ default: m.BalanceRadar })),
+);
 
 export default function HomePage() {
   const { activities, loading: activitiesLoading, error: activitiesError, createActivity } = useActivities();
@@ -103,7 +109,11 @@ export default function HomePage() {
             ) : rows.length < 3 ? (
               <BalanceBars rows={rows} />
             ) : (
-              <BalanceRadar rows={rows} />
+              <Suspense
+                fallback={<p className="p-8 text-center text-text-secondary">Caricamento del radar…</p>}
+              >
+                <BalanceRadar rows={rows} />
+              </Suspense>
             )}
             <StatusLegend />
           </section>
